@@ -31,20 +31,21 @@ public class MainActivity extends Activity {
     private SharedPreferences prefs;
     private boolean connected = false;
 
+    // RC5 source select codes (system 0x10)
     private static final String[] SOURCES = {
-        "DVD", "BD", "STB", "GAME", "AUX", "CD",
-        "PHONO", "TUNER", "NET", "USB", "BT", "HDMI 6", "HDMI 7"
+        "DVD", "BD", "STB", "GAME", "HDMI 6", "HDMI 7",
+        "AUX", "CD", "PHONO", "TUNER", "NET", "USB", "BT"
     };
-    private static final byte[] SOURCE_CODES = {
-        0x01, 0x02, 0x03, 0x04, 0x08, 0x09,
-        0x0A, 0x0B, 0x0E, 0x0F, 0x10, 0x05, 0x06
+    private static final int[] SOURCE_RC5 = {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
+        0x07, 0x08, 0x09, 0x0A, 0x0D, 0x0E, 0x0F
     };
 
     private static final String[] MODES = {
         "Stereo", "Dolby Surround", "DTS Neural:X",
         "Dolby Atmos", "Auro-3D", "Direct", "Stereo Direct"
     };
-    private static final byte[] MODE_RC5 = {
+    private static final int[] MODE_RC5 = {
         0x21, 0x28, 0x29, 0x2A, 0x2B, 0x22, 0x23
     };
 
@@ -75,8 +76,18 @@ public class MainActivity extends Activity {
         setIpConnectedStyle(false);
 
         findViewById(R.id.btnConnect).setOnClickListener(v -> toggleConnect());
-        findViewById(R.id.btnPowerOn).setOnClickListener(v -> sendCommand(new byte[]{ST, ZN, 0x00, 0x01, 0x01, ET}));
-        findViewById(R.id.btnPowerOff).setOnClickListener(v -> sendCommand(new byte[]{ST, ZN, 0x00, 0x01, 0x00, ET}));
+
+        // Power on/off via RC5 - system 0x10, cmd 0x0C = power on, 0x0C again toggles
+        // Use direct power command but also RC5 as fallback
+        findViewById(R.id.btnPowerOn).setOnClickListener(v -> {
+            sendCommand(new byte[]{ST, ZN, 0x00, 0x01, 0x01, ET});
+            sendRC5(0x10, 0x0C); // RC5 power toggle as backup
+        });
+        findViewById(R.id.btnPowerOff).setOnClickListener(v -> {
+            sendCommand(new byte[]{ST, ZN, 0x00, 0x01, 0x00, ET});
+            sendRC5(0x10, 0x0C); // RC5 power toggle as backup
+        });
+
         findViewById(R.id.btnVolUp).setOnClickListener(v -> sendRC5(0x10, 0x10));
         findViewById(R.id.btnVolDown).setOnClickListener(v -> sendRC5(0x10, 0x11));
         findViewById(R.id.btnMute).setOnClickListener(v -> sendRC5(0x10, 0x0D));
@@ -116,7 +127,8 @@ public class MainActivity extends Activity {
             boolean first = true;
             public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 if (first) { first = false; return; }
-                selectSource(pos);
+                sendRC5(0x10, SOURCE_RC5[pos]);
+                mainHandler.post(() -> sourceText.setText("Source: " + SOURCES[pos]));
             }
             public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -130,7 +142,8 @@ public class MainActivity extends Activity {
             boolean first = true;
             public void onItemSelected(AdapterView<?> p, View v, int pos, long id) {
                 if (first) { first = false; return; }
-                sendRC5(0x10, MODE_RC5[pos] & 0xFF);
+                sendRC5(0x10, MODE_RC5[pos]);
+                mainHandler.post(() -> modeText.setText("Mode: " + MODES[pos]));
             }
             public void onNothingSelected(AdapterView<?> p) {}
         });
@@ -141,10 +154,13 @@ public class MainActivity extends Activity {
     private void selectRadioPreset(int index) {
         executor.execute(() -> {
             try {
+                // Power on via direct command
                 sendCommandDirect(new byte[]{ST, ZN, 0x00, 0x01, 0x01, ET});
-                Thread.sleep(1500);
-                sendCommandDirect(new byte[]{ST, ZN, 0x1D, 0x01, 0x0E, ET});
-                Thread.sleep(500);
+                Thread.sleep(2000);
+                // Switch to NET via RC5 (source 0x0D = NET)
+                sendCommandDirect(new byte[]{ST, ZN, 0x08, 0x02, 0x10, 0x0D, ET});
+                Thread.sleep(1000);
+                // Select preset via RC5
                 sendCommandDirect(new byte[]{ST, ZN, 0x08, 0x02, 0x10, (byte) PRESET_RC5[index], ET});
                 mainHandler.post(() -> sourceText.setText("Radio: " + RADIO_PRESETS[index]));
             } catch (Exception e) {
@@ -234,11 +250,6 @@ public class MainActivity extends Activity {
         mainHandler.post(() -> volumeText.setText("Volume: " + vol));
     }
 
-    private void selectSource(int index) {
-        sendCommand(new byte[]{ST, ZN, 0x1D, 0x01, SOURCE_CODES[index], ET});
-        mainHandler.post(() -> sourceText.setText("Source: " + SOURCES[index]));
-    }
-
     private void requestStatus() {
         sendCommand(new byte[]{ST, ZN, 0x00, 0x01, (byte) 0xF0, ET});
         sendCommand(new byte[]{ST, ZN, 0x0D, 0x01, (byte) 0xF0, ET});
@@ -289,15 +300,7 @@ public class MainActivity extends Activity {
             case 0x1D:
                 if (len > 5) {
                     int srcCode = buf[5] & 0xFF;
-                    String srcName = "Unknown";
-                    for (int i = 0; i < SOURCE_CODES.length; i++) {
-                        if ((SOURCE_CODES[i] & 0xFF) == srcCode) {
-                            srcName = SOURCES[i];
-                            break;
-                        }
-                    }
-                    final String s = srcName;
-                    mainHandler.post(() -> sourceText.setText("Source: " + s));
+                    mainHandler.post(() -> sourceText.setText("Source code: 0x" + Integer.toHexString(srcCode)));
                 }
                 break;
             case 0x43:
