@@ -18,6 +18,7 @@ public class MainActivity extends Activity {
     private static final byte ST = 0x21;
     private static final byte ZN = 0x01;
     private static final byte ET = 0x0D;
+    private static final String DEFAULT_IP = "192.168.4.20";
 
     private EditText ipInput;
     private TextView statusText, volumeText, sourceText, modeText;
@@ -47,6 +48,12 @@ public class MainActivity extends Activity {
         0x21, 0x28, 0x29, 0x2A, 0x2B, 0x22, 0x23
     };
 
+    private static final String[] RADIO_PRESETS = {
+        "Preset 1", "Preset 2", "Preset 3", "Preset 4",
+        "Preset 5", "Preset 6", "Preset 7", "Preset 8"
+    };
+    private static final int[] PRESET_RC5 = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,7 +70,9 @@ public class MainActivity extends Activity {
         modeText = findViewById(R.id.modeText);
         volumeSeekBar = findViewById(R.id.volumeSeekBar);
 
-        ipInput.setText(prefs.getString("ip", "192.168.1."));
+        String savedIp = prefs.getString("ip", DEFAULT_IP);
+        ipInput.setText(savedIp);
+        setIpConnectedStyle(false);
 
         findViewById(R.id.btnConnect).setOnClickListener(v -> toggleConnect());
         findViewById(R.id.btnPowerOn).setOnClickListener(v -> sendCommand(new byte[]{ST, ZN, 0x00, 0x01, 0x01, ET}));
@@ -79,6 +88,15 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnRight).setOnClickListener(v -> sendRC5(0x10, 0x5B));
         findViewById(R.id.btnOk).setOnClickListener(v -> sendRC5(0x10, 0x57));
         findViewById(R.id.btnBack).setOnClickListener(v -> sendRC5(0x10, 0x53));
+
+        int[] presetBtnIds = {
+            R.id.btnPreset1, R.id.btnPreset2, R.id.btnPreset3, R.id.btnPreset4,
+            R.id.btnPreset5, R.id.btnPreset6, R.id.btnPreset7, R.id.btnPreset8
+        };
+        for (int i = 0; i < presetBtnIds.length; i++) {
+            final int idx = i;
+            findViewById(presetBtnIds[i]).setOnClickListener(v -> selectRadioPreset(idx));
+        }
 
         volumeSeekBar.setMax(99);
         volumeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -116,6 +134,29 @@ public class MainActivity extends Activity {
             }
             public void onNothingSelected(AdapterView<?> p) {}
         });
+
+        mainHandler.postDelayed(() -> connect(savedIp), 500);
+    }
+
+    private void selectRadioPreset(int index) {
+        executor.execute(() -> {
+            try {
+                sendCommandDirect(new byte[]{ST, ZN, 0x00, 0x01, 0x01, ET});
+                Thread.sleep(1500);
+                sendCommandDirect(new byte[]{ST, ZN, 0x1D, 0x01, 0x0E, ET});
+                Thread.sleep(500);
+                sendCommandDirect(new byte[]{ST, ZN, 0x08, 0x02, 0x10, (byte) PRESET_RC5[index], ET});
+                mainHandler.post(() -> sourceText.setText("Radio: " + RADIO_PRESETS[index]));
+            } catch (Exception e) {
+                mainHandler.post(() -> setStatus("Preset error: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void sendCommandDirect(byte[] cmd) throws Exception {
+        if (!connected) throw new Exception("Not connected");
+        out.write(cmd);
+        out.flush();
     }
 
     private void toggleConnect() {
@@ -139,13 +180,17 @@ public class MainActivity extends Activity {
                 in = socket.getInputStream();
                 connected = true;
                 mainHandler.post(() -> {
-                    setStatus("Connected to " + ip);
+                    setStatus("Connected");
+                    setIpConnectedStyle(true);
                     ((Button) findViewById(R.id.btnConnect)).setText("Disconnect");
                 });
                 requestStatus();
                 startListener();
             } catch (Exception e) {
-                mainHandler.post(() -> setStatus("Failed: " + e.getMessage()));
+                mainHandler.post(() -> {
+                    setStatus("Connection failed");
+                    setIpConnectedStyle(false);
+                });
             }
         });
     }
@@ -158,9 +203,14 @@ public class MainActivity extends Activity {
             } catch (Exception ignored) {}
             mainHandler.post(() -> {
                 setStatus("Disconnected");
+                setIpConnectedStyle(false);
                 ((Button) findViewById(R.id.btnConnect)).setText("Connect");
             });
         });
+    }
+
+    private void setIpConnectedStyle(boolean isConnected) {
+        ipInput.setTextColor(isConnected ? 0xFFFFFFFF : 0xFF888888);
     }
 
     private void sendCommand(byte[] cmd) {
@@ -189,9 +239,6 @@ public class MainActivity extends Activity {
         mainHandler.post(() -> sourceText.setText("Source: " + SOURCES[index]));
     }
 
-        sendCommand(new byte[]{ST, ZN, 0x01, 0x01, (byte) brightness, ET});
-    }
-
     private void requestStatus() {
         sendCommand(new byte[]{ST, ZN, 0x00, 0x01, (byte) 0xF0, ET});
         sendCommand(new byte[]{ST, ZN, 0x0D, 0x01, (byte) 0xF0, ET});
@@ -209,7 +256,10 @@ public class MainActivity extends Activity {
                 } catch (Exception e) {
                     if (connected) {
                         connected = false;
-                        mainHandler.post(() -> setStatus("Connection lost"));
+                        mainHandler.post(() -> {
+                            setStatus("Connection lost");
+                            setIpConnectedStyle(false);
+                        });
                     }
                     break;
                 }
