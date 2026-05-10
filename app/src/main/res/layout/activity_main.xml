@@ -1,12 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
-    <TextView
-        android:layout_width="wrap_content"
+    android:background="#1a1a2e"
+    android:padding="12dp">
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello from ArcamController!"
-        android:textSize="24sp"/>
-</LinearLayout>
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Arcam AVR20"
+            android:textColor="#e0e0e0"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingBottom="8dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="6dp">
+            <EditText android:id="@+id/ipInput"
+                android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:background="#16213e" android:textColor="#e0e0e0" android:paddingStart="8dp"
+                android:inputType="textNoSuggestions" android:hint="IP Address" android:hintTextColor="#888"/>
+            <Button android:id="@+id/btnConnect"
+                android:layout_width="wrap_content" android:layout_height="44dp"
+                android:text="Connect" android:background="#0f3460" android:textColor="#e0e0e0"
+                android:layout_marginStart="6dp"/>
+        </LinearLayout>
+        <TextView android:id="@+id/statusText"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Not connected" android:textColor="#e94560"
+            android:gravity="center" android:paddingBottom="8dp"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="POWER" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <Button android:id="@+id/btnPowerOn"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="ON" android:background="#2ecc71" android:textColor="#fff"
+                android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnPowerOff"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="STANDBY" android:background="#e74c3c" android:textColor="#fff"
+                android:layout_marginStart="4dp"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="VOLUME" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <TextView android:id="@+id/volumeText"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Volume: --" android:textColor="#e0e0e0" android:gravity="center"
+            android:paddingBottom="4dp"/>
+        <SeekBar android:id="@+id/volumeSeekBar"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <Button android:id="@+id/btnVolDown"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="VOL -" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnMute"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="MUTE" android:background="#e94560" android:textColor="#fff"
+                android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnVolUp"
+                android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                android:text="VOL +" android:background="#16213e" android:textColor="#e0e0e0"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="SOURCE" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <TextView android:id="@+id/sourceText"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Source: --" android:textColor="#e0e0e0" android:gravity="center"
+            android:paddingBottom="4dp"/>
+        <Spinner android:id="@+id/sourceSpinner"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:background="#16213e" android:layout_marginBottom="12dp"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="SOUND MODE" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <TextView android:id="@+id/modeText"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Format: --" android:textColor="#e0e0e0" android:gravity="center"
+            android:paddingBottom="4dp"/>
+        <Spinner android:id="@+id/modeSpinner"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:background="#16213e" android:layout_marginBottom="12dp"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="DISPLAY BRIGHTNESS" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <Button android:id="@+id/btnDisplayOff"
+                android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:text="Off" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnDisplayL1"
+                android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:text="Dim" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnDisplayL2"
+                android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                android:text="Full" android:background="#16213e" android:textColor="#e0e0e0"/>
+        </LinearLayout>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="NAVIGATION" android:textColor="#888" android:textSize="11sp"
+            android:paddingBottom="4dp"/>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center" android:layout_marginBottom="4dp">
+            <Button android:id="@+id/btnMenu"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="MENU" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginEnd="8dp"/>
+            <Button android:id="@+id/btnUp"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="UP" android:background="#16213e" android:textColor="#e0e0e0"/>
+            <Button android:id="@+id/btnBack"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="BACK" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center" android:layout_marginBottom="4dp">
+            <Button android:id="@+id/btnLeft"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="LEFT" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginEnd="8dp"/>
+            <Button android:id="@+id/btnOk"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="OK" android:background="#0f3460" android:textColor="#e0e0e0"/>
+            <Button android:id="@+id/btnRight"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="RIGHT" android:background="#16213e" android:textColor="#e0e0e0"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center" android:layout_marginBottom="12dp">
+            <Button android:id="@+id/btnDown"
+                android:layout_width="80dp" android:layout_height="44dp"
+                android:text="DOWN" android:background="#16213e" android:textColor="#e0e0e0"/>
+        </LinearLayout>
+        <Button android:id="@+id/btnRefresh"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:text="Refresh Status" android:background="#0f3460" android:textColor="#e0e0e0"
+            android:layout_marginBottom="16dp"/>
+    </LinearLayout>
+</ScrollView>
