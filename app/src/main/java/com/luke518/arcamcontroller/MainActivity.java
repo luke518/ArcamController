@@ -71,9 +71,6 @@ public class MainActivity extends Activity {
         findViewById(R.id.btnVolUp).setOnClickListener(v -> sendRC5(0x10, 0x10));
         findViewById(R.id.btnVolDown).setOnClickListener(v -> sendRC5(0x10, 0x11));
         findViewById(R.id.btnMute).setOnClickListener(v -> sendRC5(0x10, 0x0D));
-        findViewById(R.id.btnDisplayOff).setOnClickListener(v -> setDisplay(0x00));
-        findViewById(R.id.btnDisplayL1).setOnClickListener(v -> setDisplay(0x01));
-        findViewById(R.id.btnDisplayL2).setOnClickListener(v -> setDisplay(0x02));
         findViewById(R.id.btnRefresh).setOnClickListener(v -> requestStatus());
         findViewById(R.id.btnMenu).setOnClickListener(v -> sendRC5(0x10, 0x52));
         findViewById(R.id.btnUp).setOnClickListener(v -> sendRC5(0x10, 0x58));
@@ -192,7 +189,6 @@ public class MainActivity extends Activity {
         mainHandler.post(() -> sourceText.setText("Source: " + SOURCES[index]));
     }
 
-    private void setDisplay(int brightness) {
         sendCommand(new byte[]{ST, ZN, 0x01, 0x01, (byte) brightness, ET});
     }
 
